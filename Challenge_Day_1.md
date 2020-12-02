@@ -7,11 +7,6 @@ Source of the daily challenge comes from the [Advent of Code
 for 2020](https://adventofcode.com/) produced by [Eric
 Wastl](https://twitter.com/ericwastl).
 
-## Challenge
-
-Find two numbers in the expense report that sum to 2020 and multiply the
-two numbers together.
-
 ## Data Source
 
 The source of data in the expense report comes from:
@@ -50,6 +45,11 @@ head(d)
     ## 5    1576
     ## 6    1970
 
+## Part 1
+
+Find two numbers in the expense report that sum to 2020 and multiply the
+two numbers together.
+
 ## Analysis
 
 ### Find two numbers that add to 2020
@@ -82,7 +82,7 @@ to 2020.
 ``` r
 exp_list <- sort(cd$expense)
 
-i <- c()
+i <- j <- c()
 
 for(i in exp_list){
   j <- 2020-i
@@ -110,3 +110,48 @@ print(exp_mult)
 ```
 
     ## [1] 444019
+
+## Part 2
+
+Find three numbers in the expense report that sum to 2020 and multiply
+the three numbers together.
+
+## Analysis
+
+### Find three numbers that add to 2020
+
+Loop through possible expense summations to see which three expenses add
+to 2020.
+
+``` r
+i <- j <- k <- c()
+
+for(i in exp_list){
+  exp_list2 <- exp_list[exp_list != i]
+  for(j in exp_list2){
+    k <- 2020 - (i + j)
+    if(k %in% exp_list2){
+      print(c(i,j,k)) 
+      break()
+    }
+  }
+break()}
+```
+
+    ## [1]   48  383 1589
+
+Expenses of 48, 383, and 1589 add to 2020.
+
+### Multiply these three numbers together
+
+``` r
+exp_mult <- i*j*k
+```
+
+The final result is:
+
+``` r
+print(exp_mult)
+```
+
+    ## [1] 29212176
