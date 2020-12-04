@@ -1,0 +1,130 @@
+Day 2 - Password Philosophy
+================
+
+# Background
+
+Source of the daily challenge comes from the [Advent of Code
+for 2020](https://adventofcode.com/) produced by [Eric
+Wastl](https://twitter.com/ericwastl).
+
+## Data Source
+
+The source of data in the expense report comes from:
+<https://adventofcode.com/2020/day/2/input>
+
+``` r
+library(dplyr)
+```
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
+library(stringi)
+```
+
+## Data management
+
+Read in data from the [advent of code
+website](https://adventofcode.com/2020/day/2/input):
+
+``` r
+d <- read.csv('Data/input_Day2.txt', header = F, col.names = 'password', colClasses = 'character')
+head(d)
+```
+
+    ##                        password
+    ## 1    15-16 p: ppppppppppplppppp
+    ## 2            4-9 m: xvrwfmkmmmc
+    ## 3    14-15 w: wwwwdwwwwwwwwnwww
+    ## 4   7-16 q: qhqdljqtdqqdqqjjcqq
+    ## 5 18-20 s: hdpzqqzpngbsmncssscl
+    ## 6                4-6 k: kkkkkkk
+
+## Part 1
+
+Determine the number of valid passwords in the North Pole Toboggan
+Rental Shop database. Each row of the input dataset lists the required
+passkey for a password to be valid followed by a password. The passkey
+is defined as a numeric range of instances a a specified character must
+appear in the password.
+
+## Analysis
+
+### Find the number of all valid passwords in the database
+
+Based on a quick view of the first six rows in the dataframe, it looks
+like each row has a uniform pattern. The numeric range is separated by a
+“-”, the character of interest is separated from the numeric range by a
+space, and the password occurs after a “:”. These patterns can be used
+to extract each of these components.
+
+``` r
+cd <- d %>%
+  tidyr::separate(., password, into = c("numeric_range", "character", "password"), sep = " ") %>%
+  tidyr::separate(., numeric_range, into = c("numeric_range_min", "numeric_range_max"), sep = "-")
+
+#Transform 'numeric_range_min' and 'numeric_range_max' to class numeric
+cd$numeric_range_min <- as.numeric(cd$numeric_range_min)
+cd$numeric_range_max <- as.numeric(cd$numeric_range_max)
+
+#Remove ":" from character column
+cd$character <- gsub(":", "", cd$character)
+
+#Find the number of times the character of interest is in the password using the stringi packages 'stri_count_regex' function
+cd$character_n <- as.numeric(stri_count_regex(cd$password, cd$character))
+
+#Find if the number of times the character of interest is in the password is between the range of accepted numeric values for a valid password
+cd$password_valid <- cd$character_n >= cd$numeric_range_min & cd$character_n <= cd$numeric_range_max
+
+#Summarize the count of valid and non-valid passwords
+cd %>%
+  group_by(password_valid) %>%
+  summarise(n = n())
+```
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+    ## # A tibble: 2 x 2
+    ##   password_valid     n
+    ##   <lgl>          <int>
+    ## 1 FALSE            428
+    ## 2 TRUE             572
+
+The number of valid passwords is 572.
+
+## Part 2
+
+Passwords in the North Pole Toboggan Rental Shop database are valid if
+the character of interest is in one and only one of the two numeric
+values listed. The objective is to find the number of passwords that are
+valid based on these scheme.
+
+## Analysis
+
+``` r
+cd$password_valid2 <- xor(substr(cd$password, cd$numeric_range_min, cd$numeric_range_min) == cd$character, substr(cd$password, cd$numeric_range_max, cd$numeric_range_max) == cd$character)
+
+#Summarize the count of valid and non-valid passwords
+cd %>%
+  group_by(password_valid2) %>%
+  summarise(n = n())
+```
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+    ## # A tibble: 2 x 2
+    ##   password_valid2     n
+    ##   <lgl>           <int>
+    ## 1 FALSE             694
+    ## 2 TRUE              306
+
+The number of valid passwords is 306.
